@@ -4,6 +4,7 @@ import numpy as np
 import time
 import csv
 import os
+
 from PIL import ImageGrab
 
 # Caminho do Tesseract no Windows
