@@ -1,3 +1,4 @@
+import string
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
@@ -31,10 +32,10 @@ class ClienteApp:
         self.txt_idade = tk.Entry(root, width=40)
         self.txt_idade.pack()
 
-        # CPF
-        tk.Label(root, text="CPF").pack()
-        self.txt_cpf = tk.Entry(root, width=40)
-        self.txt_cpf.pack()
+        # ENDERECO
+        tk.Label(root, text="endereco").pack()
+        self.txt_endereco = tk.Entry(root, width=40)
+        self.txt_endereco.pack()
 
         # Botões
         tk.Button(
@@ -49,17 +50,22 @@ class ClienteApp:
             command=self.listar
         ).pack(pady=5)
 
+        tk.Button(
+            root,
+            text="Excluir",
+            command=self.excluir
+        ).pack(pady=5)
+
         # Grid
         self.tree = ttk.Treeview(
             root,
-            columns=("Codigo", "Nome", "Idade", "CPF"),
+            columns=("Nome", "Idade", "endereco"),
             show="headings"
         )
 
-        self.tree.heading("Codigo", text="Código")
         self.tree.heading("Nome", text="Nome")
         self.tree.heading("Idade", text="Idade")
-        self.tree.heading("CPF", text="CPF")
+        self.tree.heading("endereco", text="endereco")
 
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -80,7 +86,7 @@ class ClienteApp:
 
         except pyodbc.Error as erro:
 
-            if "18456" in str(erro):
+            if "18456" in string(erro):
                 messagebox.showerror(
                     "Erro",
                     "Usuário ou senha inválidos!"
@@ -105,13 +111,13 @@ class ClienteApp:
             cursor = self.conexao.cursor()
 
             cursor.execute("""
-                INSERT INTO cad_nome
-                (Nome, idade, cpf)
+                INSERT INTO teste1
+                (Nome, idade, endereco)
                 VALUES (?, ?, ?)
             """,
                 self.txt_nome.get(),
                 self.txt_idade.get(),
-                self.txt_cpf.get()
+                self.txt_endereco.get()
             )
 
             self.conexao.commit()
@@ -123,7 +129,7 @@ class ClienteApp:
 
             self.txt_nome.delete(0, tk.END)
             self.txt_idade.delete(0, tk.END)
-            self.txt_cpf.delete(0, tk.END)
+            self.txt_endereco.delete(0, tk.END)
 
             self.listar()
 
@@ -146,9 +152,9 @@ class ClienteApp:
             cursor = self.conexao.cursor()
 
             cursor.execute("""
-                SELECT Codigo, Nome, idade, cpf
-                FROM cad_nome
-                ORDER BY Codigo
+                SELECT Nome, idade, endereco
+                FROM teste1
+                ORDER BY Nome
             """)
 
             for linha in cursor.fetchall():
@@ -156,12 +162,68 @@ class ClienteApp:
                     "",
                     tk.END,
                     values=(
-                        linha.Codigo,
                         linha.Nome,
                         linha.idade,
-                        linha.cpf
+                        linha.endereco
                     )
                 )
+
+        except Exception as erro:
+            messagebox.showerror(
+                "Erro",
+                str(erro)
+            )
+
+    def excluir(self):
+
+        if not self.conexao:
+            messagebox.showwarning(
+                "Aviso",
+                "Conecte ao banco primeiro."
+            )
+            return
+
+        selecionado = self.tree.selection()
+
+        if not selecionado:
+            messagebox.showwarning(
+                "Aviso",
+                "Selecione um registro."
+            )
+            return
+
+        nome = self.tree.item(
+            selecionado[0]
+        )["values"][0]
+
+        resposta = messagebox.askyesno(
+            "Confirmação",
+            f"Deseja excluir '{nome}'?"
+        )
+
+        if not resposta:
+            return
+
+        try:
+
+            cursor = self.conexao.cursor()
+
+            cursor.execute(
+                """
+                DELETE FROM teste1
+                WHERE Nome = ?
+                """,
+                nome
+            )
+
+            self.conexao.commit()
+
+            messagebox.showinfo(
+                "Sucesso",
+                "Registro excluído!"
+            )
+
+            self.listar()
 
         except Exception as erro:
             messagebox.showerror(
