@@ -3,7 +3,6 @@ import mss
 import numpy as np
 import pyautogui
 import time
-import ctypes
 from pathlib import Path
 
 # ==========================
@@ -20,11 +19,12 @@ TIMEOUT_ETAPA = 30
 # ==========================
 
 FLUXO_BOTOES = [
+     # "principal.png",
     "pet.png"
 ]
 
 # ==========================
-# CARREGA TEMPLATES
+# CACHE DOS TEMPLATES
 # ==========================
 
 templates = {}
@@ -39,7 +39,7 @@ for arquivo in FLUXO_BOTOES:
     )
 
     if img is None:
-        print(f"Erro carregando: {arquivo}")
+        print(f"Erro carregando {arquivo}")
         exit()
 
     templates[arquivo] = img
@@ -51,42 +51,8 @@ for arquivo in FLUXO_BOTOES:
 sct = mss.mss()
 monitor = sct.monitors[1]
 
-print("Monitor:", monitor)
-print("Tela:", pyautogui.size())
-
 # ==========================
-# CLIQUE WINDOWS
-# ==========================
-
-def clique_windows(x, y):
-
-    ctypes.windll.user32.SetCursorPos(
-        int(x),
-        int(y)
-    )
-
-    time.sleep(0.1)
-
-    ctypes.windll.user32.mouse_event(
-        0x0002,
-        0,
-        0,
-        0,
-        0
-    )
-
-    time.sleep(0.05)
-
-    ctypes.windll.user32.mouse_event(
-        0x0004,
-        0,
-        0,
-        0,
-        0
-    )
-
-# ==========================
-# PROCURA E CLICA
+# LOCALIZAR E CLICAR
 # ==========================
 
 def procurar_e_clicar(nome_template):
@@ -113,7 +79,8 @@ def procurar_e_clicar(nome_template):
     )
 
     print(
-        f"{nome_template} | Confiança: {max_val:.4f}"
+        f"🔍 {nome_template} | "
+        f"Confiança: {max_val:.4f}"
     )
 
     if max_val < THRESHOLD:
@@ -124,27 +91,15 @@ def procurar_e_clicar(nome_template):
     centro_x = max_loc[0] + w // 2
     centro_y = max_loc[1] + h // 2
 
-    x_real = monitor["left"] + centro_x
-    y_real = monitor["top"] + centro_y
-
     print(
-        f"Encontrado em ({x_real},{y_real})"
+        f"✅ Encontrado em "
+        f"({centro_x},{centro_y})"
     )
 
-    pyautogui.moveTo(
-        x_real,
-        y_real,
-        duration=0.5
+    pyautogui.click(
+        centro_x,
+        centro_y
     )
-
-    time.sleep(0.5)
-
-    clique_windows(
-        x_real,
-        y_real
-    )
-
-    print("Clique enviado")
 
     return True
 
@@ -152,14 +107,14 @@ def procurar_e_clicar(nome_template):
 # EXECUÇÃO
 # ==========================
 
-print("Iniciando em 5 segundos...")
+print("🚀 Iniciando em 5 segundos...")
 time.sleep(5)
 
 for botao in FLUXO_BOTOES:
 
-    print("\n" + "=" * 40)
+    print("\n" + "=" * 50)
     print(f"ETAPA: {botao}")
-    print("=" * 40)
+    print("=" * 50)
 
     inicio = time.time()
 
@@ -172,9 +127,11 @@ for botao in FLUXO_BOTOES:
             time.time() - inicio
             > TIMEOUT_ETAPA
         ):
+
             print(
-                f"Timeout em {botao}"
+                f"⏰ Timeout em {botao}"
             )
+
             exit()
 
         time.sleep(
@@ -185,4 +142,4 @@ for botao in FLUXO_BOTOES:
         TEMPO_APOS_CLIQUE
     )
 
-print("Fluxo concluído")
+print("\n🎉 Fluxo concluído")
